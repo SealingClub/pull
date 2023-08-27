@@ -100,8 +100,13 @@ module.exports = async (app) => {
       app.scheduler.stop(context.payload.repository)
       return null
     }
+    const { owner, repo } = context.repo()
+    const { data: { parent: { name: upstreamRepo, owner: { login: upstreamOwner } } } } = await context.github.repos.get({
+      owner: owner,
+      repo: repo
+    })
     try {
-      return new Pull(context.github, context.repo({ logger: app.log }), config)
+      return new Pull(context.github, { owner, repo, upstreamRepo, upstreamOwner, logger: app.log }, config)
     } catch (e) {
       app.log.warn(e, `[${context.payload.repository.full_name}] Pull initialization failed`)
       app.scheduler.stop(context.payload.repository)
